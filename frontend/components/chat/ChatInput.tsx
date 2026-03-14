@@ -43,14 +43,8 @@ export function ChatInput({ onSendMessage, disabled }: ChatInputProps) {
       <div className="absolute -inset-0.5 bg-brand-primary rounded-3xl blur opacity-0 group-focus-within:opacity-5 transition-opacity duration-500"></div>
       <form
         onSubmit={handleSubmit}
-        className="relative flex items-end gap-3 bg-white border border-slate-200 rounded-[1.75rem] p-2 transition-all shadow-md group-focus-within:border-brand-primary/30"
+        className="relative flex items-end gap-3 bg-white border border-slate-200 rounded-[1.75rem] px-4 py-2 transition-all shadow-md group-focus-within:border-brand-primary/30"
       >
-        <button
-          type="button"
-          className="p-3 text-slate-400 hover:text-brand-primary transition-colors mb-1 ml-1"
-        >
-        </button>
-
         <textarea
           ref={textareaRef}
           value={input}
