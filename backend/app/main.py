@@ -1,11 +1,19 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.api.chat import router as chat_router
+from app.db.session import engine, Base
+from app.models.chat import Chat, Message
 from dotenv import load_dotenv
 
 load_dotenv()
 
 app = FastAPI()
+
+@app.on_event("startup")
+async def startup():
+    # Create tables on startup
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
 
 # Configure CORS
 app.add_middleware(
