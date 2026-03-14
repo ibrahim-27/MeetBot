@@ -1,62 +1,30 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect } from "react";
+import { useChatStore } from "../../lib/store";
+import { Sidebar } from "./Sidebar";
 import { MessageList } from "./MessageList";
 import { ChatInput } from "./ChatInput";
-import { Sidebar } from "./Sidebar";
-import type { MessageProps } from "./MessageBubble";
 import { Menu } from "lucide-react";
 
 export function ChatContainer() {
-  const [messages, setMessages] = useState<MessageProps[]>([
-    {
-      role: "assistant",
-      content: "Hello! I am your MeetBot. How can I help you today?"
+  const { 
+    messages, 
+    isTyping, 
+    sendMessage, 
+    currentChatId, 
+    clearMessages 
+  } = useChatStore();
+
+  // If we're on a new session (currentChatId is null), clear messages
+  useEffect(() => {
+    if (!currentChatId) {
+      clearMessages();
     }
-  ]);
-  const [isTyping, setIsTyping] = useState(false);
+  }, [currentChatId, clearMessages]);
 
   const handleSendMessage = async (content: string) => {
-    // Add user message immediately
-    const userMessage: MessageProps = { role: "user", content };
-    const updatedMessages = [...messages, userMessage];
-    setMessages(updatedMessages);
-    
-    setIsTyping(true);
-    try {
-      const response = await fetch("http://localhost:8000/api/chat", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          messages: updatedMessages.map(msg => ({
-            role: msg.role,
-            content: msg.content
-          }))
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to get response from MeetBot");
-      }
-
-      const data = await response.json();
-      const assistantMessage: MessageProps = {
-        role: "assistant",
-        content: data.content,
-      };
-      setMessages((prev) => [...prev, assistantMessage]);
-    } catch (error) {
-      console.error("Chat error:", error);
-      const errorMessage: MessageProps = {
-        role: "assistant",
-        content: "Sorry, I'm having trouble connecting right now. Please try again later.",
-      };
-      setMessages((prev) => [...prev, errorMessage]);
-    } finally {
-      setIsTyping(false);
-    }
+    await sendMessage(content);
   };
 
   return (

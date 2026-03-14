@@ -4,19 +4,28 @@ import Image from "next/image";
 import { MessageSquare, Plus, User, LayoutDashboard, History } from "lucide-react";
 import { cn } from "../../lib/utils";
 
-interface Conversation {
-  id: string;
-  title: string;
-}
-
-const HARDCODED_CONVERSATIONS: Conversation[] = [
-  { id: "1", title: "Meeting Notes Summary" },
-  { id: "2", title: "Project Brainstorming" },
-  { id: "3", title: "Client Call Follow-up" },
-  { id: "4", title: "Technical Architecture" },
-];
+import { useEffect } from "react";
+import { useChatStore } from "../../lib/store";
 
 export function Sidebar() {
+  const { 
+    sessions, 
+    currentChatId, 
+    setChatId, 
+    fetchSessions, 
+    clearMessages,
+    isLoadingSessions 
+  } = useChatStore();
+
+  useEffect(() => {
+    fetchSessions();
+  }, [fetchSessions]);
+
+  const handleNewSession = () => {
+    setChatId(null);
+    clearMessages();
+  };
+
   return (
     <aside className="hidden md:flex flex-col w-[280px] h-full bg-brand-primary text-white shrink-0">
       {/* Brand Header */}
@@ -34,7 +43,10 @@ export function Sidebar() {
 
       {/* Primary Actions */}
       <div className="px-4 mb-6">
-        <button className="flex items-center gap-3 w-full px-4 py-3 text-sm font-bold transition-all bg-white text-brand-primary rounded-2xl shadow-lg hover:bg-slate-50 group">
+        <button 
+          onClick={handleNewSession}
+          className="flex items-center gap-3 w-full px-4 py-3 text-sm font-bold transition-all bg-white text-brand-primary rounded-2xl shadow-lg hover:bg-slate-50 group active:scale-95"
+        >
           <Plus className="w-4 h-4" />
           <span>New Session</span>
         </button>
@@ -47,15 +59,25 @@ export function Sidebar() {
           <span>Recent History</span>
         </div>
         
-        {HARDCODED_CONVERSATIONS.map((chat) => (
-          <button
-            key={chat.id}
-            className="flex items-center gap-3 w-full px-4 py-3 text-sm transition-all rounded-xl hover:bg-white/20 text-left group overflow-hidden text-white hover:text-white active:scale-[0.98]"
-          >
-            <MessageSquare className="w-4 h-4 shrink-0 opacity-70 group-hover:opacity-100 transition-opacity" />
-            <span className="truncate font-medium">{chat.title}</span>
-          </button>
-        ))}
+        {isLoadingSessions ? (
+          <div className="px-4 py-2 text-xs text-white/40 animate-pulse">Loading history...</div>
+        ) : sessions.length === 0 ? (
+          <div className="px-4 py-2 text-xs text-white/40 italic">No sessions yet</div>
+        ) : (
+          sessions.map((chat) => (
+            <button
+              key={chat.id}
+              onClick={() => setChatId(chat.id)}
+              className={cn(
+                "flex items-center gap-3 w-full px-4 py-3 text-sm transition-all rounded-xl hover:bg-white/10 text-left group overflow-hidden active:scale-[0.98]",
+                currentChatId === chat.id ? "bg-white/20 text-white" : "text-white/80 hover:text-white"
+              )}
+            >
+              <MessageSquare className="w-4 h-4 shrink-0 opacity-70 group-hover:opacity-100 transition-opacity" />
+              <span className="truncate font-medium">{chat.title}</span>
+            </button>
+          ))
+        )}
       </nav>
 
       {/* User / Settings Section */}

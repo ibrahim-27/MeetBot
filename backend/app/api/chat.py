@@ -15,6 +15,16 @@ async def get_sessions(db: AsyncSession = Depends(get_db)):
     chats = result.scalars().all()
     return [{"id": chat.id, "title": chat.title} for chat in chats]
 
+@router.get("/sessions/{chat_id}/messages")
+async def get_messages(chat_id: str, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(
+        select(Message)
+        .where(Message.chat_id == chat_id)
+        .order_by(Message.created_at.asc())
+    )
+    messages = result.scalars().all()
+    return [{"role": msg.role, "content": msg.content} for msg in messages]
+
 @router.post("/chat", response_model=ChatResponse)
 async def get_response(request: ChatRequest, db: AsyncSession = Depends(get_db)):
     try:
@@ -24,7 +34,7 @@ async def get_response(request: ChatRequest, db: AsyncSession = Depends(get_db))
         chat = result.scalar_one_or_none()
         
         if not chat:
-            chat = Chat(id=chat_id, title="New Session")
+            chat = Chat(id=chat_id, title=request.messages[0].content)
             db.add(chat)
             await db.flush()
 
