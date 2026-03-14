@@ -13,7 +13,8 @@ export function ChatContainer() {
     isTyping, 
     sendMessage, 
     currentChatId, 
-    clearMessages 
+    clearMessages,
+    isLoadingMessages
   } = useChatStore();
 
   // If we're on a new session (currentChatId is null), clear messages
@@ -50,7 +51,11 @@ export function ChatContainer() {
 
         {/* Messages Area */}
         <div className="flex-1 w-full overflow-hidden">
-          <MessageList messages={messages} isTyping={isTyping} />
+          <MessageList 
+            messages={messages} 
+            isTyping={isTyping} 
+            isLoadingMessages={isLoadingMessages} 
+          />
         </div>
 
         {/* Input Area */}

@@ -5,9 +5,10 @@ import { TypingIndicator } from "./TypingIndicator";
 interface MessageListProps {
   messages: MessageProps[];
   isTyping?: boolean;
+  isLoadingMessages?: boolean;
 }
 
-export function MessageList({ messages, isTyping }: MessageListProps) {
+export function MessageList({ messages, isTyping, isLoadingMessages }: MessageListProps) {
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -16,8 +17,15 @@ export function MessageList({ messages, isTyping }: MessageListProps) {
 
   return (
     <div className="h-full overflow-y-auto custom-scrollbar flex flex-col pt-4">
+      {/* Loading Overlay or Bar */}
+      {isLoadingMessages && (
+        <div className="absolute top-0 left-0 w-full h-1 z-20">
+          <div className="h-full bg-brand-primary animate-[loading_1.5s_infinite] origin-left"></div>
+        </div>
+      )}
+
       <div className="flex-1">
-        {messages.length === 0 ? (
+        {messages.length === 0 && !isLoadingMessages ? (
           <div className="h-full flex flex-col items-center justify-center opacity-40 mt-[10vh]">
             <div className="w-24 h-24 rounded-[2rem] bg-brand-primary/5 border-2 border-brand-primary/20 flex items-center justify-center mb-6 rotate-3 shadow-sm">
               <span className="text-5xl font-black text-brand-primary italic -rotate-6">M</span>
@@ -27,7 +35,7 @@ export function MessageList({ messages, isTyping }: MessageListProps) {
           </div>
         ) : (
           <>
-            {messages.map((message, index) => (
+            {!isLoadingMessages && messages.map((message, index) => (
               <MessageBubble key={index} role={message.role} content={message.content} />
             ))}
             {isTyping && <TypingIndicator />}

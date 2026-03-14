@@ -16,6 +16,7 @@ interface ChatState {
   messages: Message[];
   isTyping: boolean;
   isLoadingSessions: boolean;
+  isLoadingMessages: boolean;
   
   // Actions
   setChatId: (id: string | null) => void;
@@ -32,6 +33,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
   messages: [],
   isTyping: false,
   isLoadingSessions: false,
+  isLoadingMessages: false,
 
   setChatId: (id) => {
     set({ currentChatId: id });
@@ -57,6 +59,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
   },
 
   fetchMessages: async (chatId: string) => {
+    set({ isLoadingMessages: true });
     try {
       const response = await fetch(`http://localhost:8000/api/sessions/${chatId}/messages`);
       if (!response.ok) throw new Error('Failed to fetch messages');
@@ -64,6 +67,8 @@ export const useChatStore = create<ChatState>((set, get) => ({
       set({ messages: data });
     } catch (error) {
       console.error('Error fetching messages:', error);
+    } finally {
+      set({ isLoadingMessages: false });
     }
   },
 
