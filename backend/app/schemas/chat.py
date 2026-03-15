@@ -12,3 +12,4 @@ class ChatRequest(BaseModel):
 class ChatResponse(BaseModel):
     content: str
     role: str = "assistant"
+    chat_id: Optional[str] = None
