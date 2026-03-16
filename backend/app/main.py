@@ -4,6 +4,9 @@ from app.api.chat import router as chat_router
 from app.api.auth import router as auth_router
 from app.db.session import engine, Base
 from app.models.chat import Chat, Message
+from app.models.user import User
+from app.models.organization import Organization
+
 from dotenv import load_dotenv
 
 load_dotenv()

@@ -3,7 +3,8 @@ from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from app.db.session import get_db
-from app.models.chat import Chat, Message, User
+from app.models.chat import Chat, Message
+from app.models.user import User
 from app.schemas.chat import ChatRequest, ChatResponse
 from app.api.auth import get_current_user
 import uuid

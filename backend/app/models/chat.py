@@ -4,27 +4,6 @@ from datetime import datetime
 from app.db.session import Base
 import uuid
 
-class Organization(Base):
-    __tablename__ = "organizations"
-    
-    id: Mapped[str] = mapped_column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
-    name: Mapped[str] = mapped_column(String, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
-    
-    users: Mapped[list["User"]] = relationship(back_populates="organization")
-
-class User(Base):
-    __tablename__ = "users"
-    
-    id: Mapped[str] = mapped_column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
-    username: Mapped[str] = mapped_column(String, unique=True, nullable=False, index=True)
-    hashed_password: Mapped[str] = mapped_column(String, nullable=False)
-    organization_id: Mapped[str] = mapped_column(String, ForeignKey("organizations.id"))
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
-    
-    organization: Mapped["Organization"] = relationship(back_populates="users")
-    chats: Mapped[list["Chat"]] = relationship(back_populates="user")
-
 class Chat(Base):
     __tablename__ = "chats"
 
