@@ -5,7 +5,7 @@ import os
 class OpenRouter:
     def __init__(self):
         self.api_key = os.getenv("OPENROUTER_API_KEY", "<API_KEY_MISSING>")
-        self.base_url = "https://openrouter.ai/api/v1/chat/completions"
+        self.base_url = os.getenv("OPENROUTER_BASE_URL", "<BASE_URL_MISSING>")
 
     async def get_response(self, messages: list) -> dict:
         headers = {
