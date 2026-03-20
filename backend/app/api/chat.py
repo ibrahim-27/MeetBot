@@ -1,4 +1,4 @@
-from app.integrations.llm.openRouter import OpenRouter
+from app.integrations.openRouter import OpenRouter
 from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
