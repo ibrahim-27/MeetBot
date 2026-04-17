@@ -6,10 +6,28 @@ import { useRouter } from "next/navigation";
 import { useChatStore } from "../../lib/store";
 import { Lock, User, ArrowRight } from "lucide-react";
 
+function formatLoginError(detail: unknown, status: number): string {
+  if (status === 401) {
+    return "Incorrect username or password. Check what you typed and try again.";
+  }
+  if (typeof detail === "string") return detail;
+  if (Array.isArray(detail)) {
+    return detail
+      .map((item) =>
+        typeof item === "object" && item !== null && "msg" in item
+          ? String((item as { msg: string }).msg)
+          : String(item)
+      )
+      .join(" ");
+  }
+  return "Something went wrong. Please try again.";
+}
+
 export default function LoginPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
   
   const { login, isAuthenticated, showToast } = useChatStore();
   const router = useRouter();
@@ -23,7 +41,8 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    
+    setFormError(null);
+
     try {
       const response = await fetch("http://localhost:8000/api/auth/login", {
         method: "POST",
@@ -32,16 +51,27 @@ export default function LoginPage() {
       });
 
       if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.detail || "Login failed");
+        let detail: unknown;
+        try {
+          detail = (await response.json()).detail;
+        } catch {
+          detail = undefined;
+        }
+        const message = formatLoginError(detail, response.status);
+        setFormError(message);
+        showToast({ type: "error", message });
+        return;
       }
 
       const data = await response.json();
       login(data.access_token);
       showToast({ type: "success", message: "Successfully logged in!" });
       router.push("/");
-    } catch (err: any) {
-      showToast({ type: "error", message: err.message });
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error ? err.message : "Network error. Is the API running?";
+      setFormError(message);
+      showToast({ type: "error", message });
     } finally {
       setIsLoading(false);
     }
@@ -104,6 +134,15 @@ export default function LoginPage() {
                 />
               </div>
             </div>
+
+            {formError && (
+              <p
+                className="text-sm text-red-600 font-medium text-center bg-red-50 border border-red-100 rounded-2xl py-3 px-4"
+                role="alert"
+              >
+                {formError}
+              </p>
+            )}
 
             <button
               type="submit"

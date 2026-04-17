@@ -1,23 +1,16 @@
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
-from sqlalchemy.orm import DeclarativeBase
 import os
+
 from dotenv import load_dotenv
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.orm import DeclarativeBase
 
 load_dotenv()
 
-# Supabase URL needs to be converted for asyncpg
-DB_URL = os.getenv("DB_URL", "").strip().strip("'").strip('"')
-if DB_URL.startswith("postgresql://"):
-    ASYNC_DB_URL = DB_URL.replace("postgresql://", "postgresql+asyncpg://", 1)
-else:
-    ASYNC_DB_URL = DB_URL
+DATABASE_URL = os.getenv("DATABASE_URL", "").strip().strip("'\"")
+if not DATABASE_URL:
+    raise ValueError("Set DATABASE_URL in the environment.")
 
-
-engine = create_async_engine(
-    ASYNC_DB_URL, 
-    echo=True,
-    connect_args={"statement_cache_size": 0}
-)
+engine = create_async_engine(DATABASE_URL, echo=True)
 
 AsyncSessionLocal = async_sessionmaker(
     bind=engine,
@@ -25,8 +18,10 @@ AsyncSessionLocal = async_sessionmaker(
     expire_on_commit=False,
 )
 
+
 class Base(DeclarativeBase):
     pass
+
 
 async def get_db():
     async with AsyncSessionLocal() as session:
