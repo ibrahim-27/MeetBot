@@ -1,27 +1,51 @@
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
-from app.api.chat import router as chat_router
-from app.api.auth import router as auth_router
-from app.db.session import engine, Base
-from app.models.chat import Chat, Message
-from app.models.user import User
-from app.models.organization import Organization
 
 load_dotenv()
 
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.triggers.interval import IntervalTrigger
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+from app.api.auth import router as auth_router
+from app.api.chat import router as chat_router
+from app.db.session import Base, engine
+from app.jobs.transcript_job import run_transcript_summary_job
+from app.models.chat import Chat, Message
+from app.models.meeting import Meeting
+from app.models.organization import Organization
+from app.models.user import User
+
 app = FastAPI()
+scheduler = AsyncIOScheduler()
+
 
 @app.on_event("startup")
 async def startup():
-    # Create tables on startup
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
-# Configure CORS
+    if not scheduler.running:
+        scheduler.add_job(
+            run_transcript_summary_job,
+            trigger=IntervalTrigger(hours=24),
+            id="transcript_summary_job",
+            replace_existing=True,
+            max_instances=1,
+            coalesce=True,
+        )
+        scheduler.start()
+
+
+@app.on_event("shutdown")
+async def shutdown():
+    if scheduler.running:
+        scheduler.shutdown(wait=False)
+
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # For development; restrict this in production
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -29,6 +53,7 @@ app.add_middleware(
 
 app.include_router(chat_router, prefix="/api")
 app.include_router(auth_router, prefix="/api")
+
 
 @app.get("/")
 def read_root():
