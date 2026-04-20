@@ -137,8 +137,8 @@ async def get_response(
 
         open_router = OpenRouter()
         base_system = (
-            "You are MeetBot. Always reply in plain text. Do not use Markdown. "
-            "Keep your responses as crisp and concise as possible. "
+            "You are MeetBot. You may use Markdown for formatting (headings, lists, bold, links, "
+            "code fences when helpful). Keep responses crisp. "
             "Answer only what the user asked for; do not add unrelated detail or extra topics "
             "they did not request."
         )
