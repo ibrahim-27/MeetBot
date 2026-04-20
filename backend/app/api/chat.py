@@ -7,11 +7,63 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.auth import get_current_user
 from app.db.session import get_db
 from app.integrations.openRouter import OpenRouter
+from app.rag.retrieve import retrieve_meeting_chunks
 from app.models.chat import Chat, Message
 from app.models.user import User
 from app.schemas.chat import ChatRequest, ChatResponse
 
 router = APIRouter()
+
+
+def _message_text(msg) -> str:
+    return (getattr(msg, "content", "") or "").strip()
+
+
+def _format_recent_context(messages: list, max_turns: int = 8) -> str:
+    rows = []
+    for msg in messages[-max_turns:]:
+        role = (getattr(msg, "role", "") or "").strip().lower() or "user"
+        content = _message_text(msg)
+        if not content:
+            continue
+        rows.append(f"{role}: {content}")
+    return "\n".join(rows)
+
+
+async def _rewrite_retrieval_query(open_router: OpenRouter, messages: list) -> str:
+    latest = _message_text(messages[-1]) if messages else ""
+    if not latest:
+        return ""
+    context = _format_recent_context(messages)
+    rewrite_messages = [
+        {
+            "role": "system",
+            "content": (
+                "Rewrite the latest user question into one standalone retrieval query for meeting "
+                "transcript search. Use conversation context to resolve references like 'this', "
+                "'that', and pronouns. Keep it concise and factual. Do not answer the question. "
+                "Output only the rewritten query text."
+            ),
+        },
+        {
+            "role": "user",
+            "content": (
+                f"Conversation:\n{context}\n\n"
+                f"Latest user message:\n{latest}\n\n"
+                "Return only the rewritten standalone retrieval query."
+            ),
+        },
+    ]
+    response = await open_router.get_response(rewrite_messages)
+    rewritten = (response.get("content") or "").strip()
+    if not rewritten or rewritten.startswith("Error:"):
+        return latest
+    cleaned = rewritten.strip().strip("`").strip().strip("\"'")
+    if not cleaned:
+        return latest
+    if len(cleaned) > 400:
+        cleaned = cleaned[:400].strip()
+    return cleaned or latest
 
 
 @router.get("/sessions")
@@ -84,17 +136,32 @@ async def get_response(
         db.add(user_msg)
 
         open_router = OpenRouter()
-        system_message = {
-            "role": "system",
-            "content": (
-                "You are MeetBot. Always reply in plain text. Do not use Markdown. "
-                "Emojis are allowed. Keep your responses as crisp and concise as possible."
-            ),
-        }
+        base_system = (
+            "You are MeetBot. Always reply in plain text. Do not use Markdown. "
+            "Keep your responses as crisp and concise as possible. "
+            "Answer only what the user asked for; do not add unrelated detail or extra topics "
+            "they did not request."
+        )
+        retrieval_query = await _rewrite_retrieval_query(open_router, request.messages)
+        rag_bits: list[str] = []
+        try:
+            pairs = await retrieve_meeting_chunks(db, retrieval_query)
+            if pairs:
+                rag_bits = [f"meeting_id={mid}\n{text}" for mid, text in pairs]
+        except Exception:
+            pass
+        extra = ""
+        if rag_bits:
+            extra = (
+                "\n\nUse only the following meeting transcript excerpts when they help answer "
+                "the user's question; if they are irrelevant, ignore them:\n\n"
+                + "\n---\n".join(rag_bits)
+            )
+        system_message = {"role": "system", "content": base_system + extra}
 
         messages = [system_message] + [m.model_dump() for m in request.messages]
         response_data = await open_router.get_response(messages)
-        content = response_data.get("content", "No response from AI")
+        content = response_data.get("content", "No response from AI").strip()
 
         assistant_msg = Message(
             chat_id=chat.id,

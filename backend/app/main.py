@@ -13,6 +13,8 @@ from app.db.session import Base, engine
 from app.jobs.transcript_job import run_transcript_summary_job
 from app.models.chat import Chat, Message
 from app.models.meeting import Meeting
+from app.models.meeting_chunk import MeetingChunk
+
 from app.models.organization import Organization
 from app.models.user import User
 
@@ -28,7 +30,7 @@ async def startup():
     if not scheduler.running:
         scheduler.add_job(
             run_transcript_summary_job,
-            trigger=IntervalTrigger(hours=24),
+            trigger=IntervalTrigger(minutes=5),
             id="transcript_summary_job",
             replace_existing=True,
             max_instances=1,
