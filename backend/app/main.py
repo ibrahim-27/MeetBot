@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from apscheduler.triggers.interval import IntervalTrigger
+from apscheduler.triggers.cron import CronTrigger
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -30,7 +30,7 @@ async def startup():
     if not scheduler.running:
         scheduler.add_job(
             run_transcript_summary_job,
-            trigger=IntervalTrigger(minutes=5),
+            trigger=CronTrigger(hour=0, minute=0),
             id="transcript_summary_job",
             replace_existing=True,
             max_instances=1,
