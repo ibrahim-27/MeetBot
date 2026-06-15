@@ -141,30 +141,40 @@ async def get_response(
             "code fences when helpful). Keep responses crisp and only address what the user asked.\n\n"
             "Grounding rules:\n"
             "- If the user asks about meetings (what was said or decided, who said what, "
-            "meeting-specific facts, dates, IDs, stack or process choices as discussed in a meeting), "
-            "you must base answers ONLY on the meeting transcript excerpts included in this system "
-            "message below (when present). Do not invent or infer meeting-specific details that are "
-            "not clearly supported by those excerpts. Never fabricate meeting IDs, model names, "
-            "numbers, or decisions.\n"
+            "meeting-specific facts, dates, or other meeting details), you must base answers ONLY on "
+            "the meeting transcript excerpts included in this system message below (when present). "
+            "Do not invent or infer meeting-specific details that are not clearly supported by those excerpts.\n"
+            "- Never include or expose internal identifiers (e.g. meeting_id values) in your reply. "
+            "Do not output raw database IDs or internal identifiers under any circumstance.\n"
+            "- Do not paste transcript chunks verbatim into your answer unless the user explicitly "
+            "requests to see source excerpts. When summarizing, synthesize and paraphrase; avoid long "
+            "verbatim quotations.\n"
             "- If no transcript excerpts are included below and the question requires meeting facts, "
             "say you do not have that information in the available meeting transcripts.\n"
             "- If the question is general (greetings, concepts, coding help, etc.) and does not "
-            "require meeting-specific facts, answer normally using general knowledge; do not "
-            "pretend meeting excerpts exist when there are none.\n"
-            "- When you rely on excerpts, keep claims tightly tied to the quoted content."
+            "require meeting-specific facts, answer normally using general knowledge.\n"
+            "- You MAY provide meeting titles and meeting dates when relevant or when explicitly asked. "
+            "You MUST NOT provide meeting IDs. You MAY provide speaker names only when the user asks "
+            "explicitly for speaker attribution."
         )
         retrieval_query = await _rewrite_retrieval_query(open_router, request.messages)
         rag_bits: list[str] = []
         try:
             pairs = await retrieve_meeting_chunks(db, retrieval_query)
             if pairs:
-                rag_bits = [f"meeting_id={mid}\n{text}" for mid, text in pairs]
+                rag_bits = [
+                    f"title={title}\ndate={date}\n{text}"
+                    for mid, title, date, text in pairs
+                ]
         except Exception:
             pass
         extra = ""
         if rag_bits:
             extra = (
-                "\n\nMeeting transcript excerpts (only valid source for meeting-specific claims):\n\n"
+                "\n\nMeeting transcript excerpts (only valid source for meeting-specific claims). "
+                "Each block includes title and date for grounding; internal IDs are omitted and must not "
+                "be revealed. Do not repeat title, date, or speaker attribution in your answer unless the "
+                "user explicitly asks.\n\n"
                 + "\n---\n".join(rag_bits)
             )
         system_message = {"role": "system", "content": base_system + extra}
