@@ -5,6 +5,13 @@ export interface Message {
   content: string;
 }
 
+export interface Session {
+  id: string;
+  title: string;
+  user_id?: string;
+  created_at: string;
+}
+
 export type ToastType = 'success' | 'error' | 'info' | 'confirm';
 
 export interface ToastState {

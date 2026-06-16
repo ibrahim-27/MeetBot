@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useChatStore } from "../../lib/store";
 import { Lock, User, ArrowRight } from "lucide-react";
@@ -83,11 +82,10 @@ export default function LoginPage() {
         {/* Brand Header */}
         <div className="flex flex-col items-center mb-10 text-center">
           <div className="relative w-20 h-20 rounded-[2.5rem] overflow-hidden shadow-2xl border-4 border-white bg-white mb-6 rotate-3">
-            <Image 
+            <img 
               src="/logo.png" 
               alt="MeetBot Logo" 
-              fill
-              className="object-contain p-3"
+              className="w-full h-full object-contain p-3"
             />
           </div>
           <h1 className="text-4xl font-black tracking-tighter text-brand-text mb-2">Welcome Back</h1>
