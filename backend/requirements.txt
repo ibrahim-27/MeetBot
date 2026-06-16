@@ -4,11 +4,11 @@ apscheduler==3.10.4
 asyncpg==0.30.0
 click==8.3.0
 colorama==0.4.6
-fastapi==0.115.1
+fastapi==0.104.1
 httpx==0.28.1
 idna==3.10
 passlib[bcrypt]
-pydantic==2.8.2
+pydantic==1.10.15
 python-dotenv==1.1.1
 python-jose[cryptography]
 PyYAML==6.0.2
