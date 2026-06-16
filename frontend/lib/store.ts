@@ -106,7 +106,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
     if (!token) return;
 
     try {
-      const response = await fetch(`http://localhost:8000/api/sessions/${id}`, {
+      const response = await fetch(`/api/sessions/${id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -145,7 +145,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
     set({ isLoadingSessions: true });
     try {
-      const response = await fetch('http://localhost:8000/api/sessions', {
+      const response = await fetch('/api/sessions', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (!response.ok) {
@@ -172,7 +172,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
     set({ isLoadingMessages: true });
     try {
-      const response = await fetch(`http://localhost:8000/api/sessions/${chatId}/messages`, {
+      const response = await fetch(`/api/sessions/${chatId}/messages`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (!response.ok) {
@@ -208,7 +208,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
     try {
       // 2. Post to API
-      const response = await fetch('http://localhost:8000/api/chat', {
+      const response = await fetch('/api/chat', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
