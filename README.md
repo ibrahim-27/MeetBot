@@ -2,6 +2,15 @@
 
 MeetBot ingests meeting transcripts, summarizes them, stores summaries in Notion, builds embeddings, and exposes a RAG-powered chat UI to ask questions about meetings.
 
+## Live Demo
+
+* **Live Application:** [MeetBot Live Demo](https://meetbot-production-c795.up.railway.app/)
+
+### Demo Credentials
+To explore the platform's features, use the following administrator testing account:
+* **Username:** `admin`
+* **Password:** `Admin@1234`
+
 ## Quick overview
 - Backend: FastAPI app (`backend/app`) — handles auth, chat, transcript processing, summarization, and embedding/storage.
 - Frontend: Next.js app (`frontend`) — chat UI that talks to the backend APIs.
