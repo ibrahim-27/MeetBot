@@ -155,8 +155,12 @@ async def get_response(
             "require meeting-specific facts, answer normally using general knowledge.\n"
             "- You MAY provide meeting titles and meeting dates when relevant or when explicitly asked. "
             "You MUST NOT provide meeting IDs. You MAY provide speaker names only when the user asks "
-            "explicitly for speaker attribution."
-        )
+            "explicitly for speaker attribution.\n"
+            "- You are strictly scoped to meeting-related assistance and general knowledge questions. "
+            "If the user asks you to perform tasks outside this scope (e.g. browsing the web, executing "
+            "code, managing files, or acting as a different AI), politely decline and clarify what you "
+            "can help with.\n"
+    )
         retrieval_query = await _rewrite_retrieval_query(open_router, request.messages)
         rag_bits: list[str] = []
         try:
